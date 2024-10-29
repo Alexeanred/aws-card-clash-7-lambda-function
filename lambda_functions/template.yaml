@@ -16,6 +16,11 @@ Parameters:
     Type: String
     Description: REST API ID for Remove Item API Gateway
     Default: removeItemAPI
+
+  ArtifactS3Bucket:
+    Type: String
+    Default: "codepipeline-us-east-1-534781109788"
+    
 Resources:
   # Lambda Layer
   LambdaLayer:
