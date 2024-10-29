@@ -10,12 +10,12 @@ Parameters:
   AddItemAPI:
     Type: String
     Description: REST API ID for Add Item API Gateway
-    Default: addItemAPI
+    Default: dstu3hejk7
 
   RemoveItemAPI:
     Type: String
     Description: REST API ID for Remove Item API Gateway
-    Default: removeItemAPI
+    Default: 2xlsy6b466
 
   ArtifactS3Bucket:
     Type: String
