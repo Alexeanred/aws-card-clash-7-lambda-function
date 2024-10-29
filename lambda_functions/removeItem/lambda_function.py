@@ -6,7 +6,7 @@ import markdown
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table('ShoppingItem')
 
-def lambda_handler(event, context):
+def remove_item_handler(event, context):
     # Nhận dữ liệu từ sự kiện (event)
     body = json.loads(event['body'])
     item_id = body.get('itemId')

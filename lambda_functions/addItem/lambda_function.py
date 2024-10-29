@@ -6,7 +6,7 @@ import markdown
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table('ShoppingItem')
 
-def lambda_handler(event, context):
+def add_item_handler(event, context):
     print("Envent: ",event)
     # Nhận dữ liệu từ sự kiện (event)
     body = json.loads(event['body'])
