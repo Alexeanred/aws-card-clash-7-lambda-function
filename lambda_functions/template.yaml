@@ -1,0 +1,124 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template for creating two Lambda functions with a shared layer to interact with DynamoDB and link to API Gateway.
+
+Parameters:
+  DynamoDBTableName:
+    Type: String
+    Description: Name of the existing DynamoDB table
+    Default: ShoppingItem
+
+  AddItemAPI:
+    Type: String
+    Description: REST API ID for Add Item API Gateway
+    Default: addItemAPI
+
+  RemoveItemAPI:
+    Type: String
+    Description: REST API ID for Remove Item API Gateway
+    Default: removeItemAPI
+Resources:
+  # Lambda Layer
+  LambdaLayer:
+    Type: AWS::Lambda::LayerVersion
+    Properties:
+      LayerName: CommonLambdaLayer
+      Description: Layer for shared dependencies
+      CompatibleRuntimes:
+        - python3.12
+      Content:
+        S3Bucket: !Ref "ArtifactS3Bucket"
+        S3Key: "ci-cd-pipeline/BuildArtif/lambda_layer.zip"
+
+  # AddItem Lambda Function
+  AddItemLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: AddItemFunction
+      Handler: lambda_function.add_item_handler
+      Runtime: python3.12
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref "ArtifactS3Bucket"
+        S3Key: "ci-cd-pipeline/BuildArtif/lambda_functions/addItem.zip"
+      Layers:
+        - !Ref LambdaLayer
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref DynamoDBTableName
+
+  # RemoveItem Lambda Function
+  RemoveItemLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: RemoveItemFunction
+      Handler: lambda_function.remove_item_handler
+      Runtime: python3.12
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref "ArtifactS3Bucket"
+        S3Key: "ci-cd-pipeline/BuildArtif/lambda_functions/removeItem.zip"
+      Layers:
+        - !Ref LambdaLayer
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref DynamoDBTableName
+
+  # Execution Role for Lambda Functions
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: LambdaExecutionRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: DynamoDBAccessPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:DeleteItem
+                Resource: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTableName}"
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "arn:aws:logs:*:*:*"
+
+  # API Gateway Integrations for Lambda Functions
+  AddItemLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref AddItemLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${AddItemAPI}/*"
+
+  RemoveItemLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref RemoveItemLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RemoveItemAPI}/*"
+
+Outputs:
+  AddItemLambdaFunctionArn:
+    Description: ARN of the Add Item Lambda function
+    Value: !GetAtt AddItemLambdaFunction.Arn
+
+  RemoveItemLambdaFunctionArn:
+    Description: ARN of the Remove Item Lambda function
+    Value: !GetAtt RemoveItemLambdaFunction.Arn
+
+  LambdaLayerArn:
+    Description: ARN of the shared Lambda Layer
+    Value: !Ref LambdaLayer
+ 
