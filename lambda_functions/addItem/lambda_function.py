@@ -18,7 +18,7 @@ def add_item_handler(event, context):
     if not item_id or not item_name:
         return {
             'statusCode': 400,
-            'body': json.dumps('itemId và itemName là bắt buộc.')
+            'body': json.dumps('itemId và itemName are compulsory.')
         }
     
     try:
@@ -31,10 +31,10 @@ def add_item_handler(event, context):
         )
         return {
             'statusCode': 200,
-            'body': json.dumps('Item đã được thêm thành công!')
+            'body': json.dumps('Item is added successfully!')
         }
     except ClientError as e:
         return {
             'statusCode': 500,
-            'body': json.dumps(f"Lỗi khi thêm item: {e.response['Error']['Message']}")
+            'body': json.dumps(f"Error when add item: {e.response['Error']['Message']}")
         }

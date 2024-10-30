@@ -14,7 +14,7 @@ def remove_item_handler(event, context):
     if not item_id:
         return {
             'statusCode': 400,
-            'body': json.dumps('itemId là bắt buộc.')
+            'body': json.dumps('itemId is compulsory')
         }
     
     try:
@@ -26,10 +26,10 @@ def remove_item_handler(event, context):
         )
         return {
             'statusCode': 200,
-            'body': json.dumps('Item đã được xóa thành công!')
+            'body': json.dumps('Item is successfully deleted!')
         }
     except ClientError as e:
         return {
             'statusCode': 500,
-            'body': json.dumps(f"Lỗi khi xóa item: {e.response['Error']['Message']}")
+            'body': json.dumps(f"Error when deleting item: {e.response['Error']['Message']}")
         }
