@@ -41,7 +41,7 @@ Resources:
         - python3.12
       Content:
         S3Bucket: !Ref BucketName
-        S3Key: !Sub "ci-cd-pipeline/BuildArtif/${ObjectKey}/lambda_layer.zip"
+        S3Key: !Sub "ci-cd-pipeline/lambdaFunc/${ObjectKey}/lambda_layer.zip"
         
   # AddItem Lambda Function
   AddItemLambdaFunction:
@@ -53,7 +53,7 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Code:
         S3Bucket: !Ref BucketName
-        S3Key: !Sub "ci-cd-pipeline/BuildArtif/${ObjectKey}/lambda_functions/addItem.zip"
+        S3Key: !Sub "ci-cd-pipeline/lambdaFunc/${ObjectKey}/lambda_functions/addItem.zip"
       Layers:
         - !Ref LambdaLayer
       Environment:
@@ -70,7 +70,7 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Code:
         S3Bucket: !Ref BucketName  
-        S3Key: !Sub "ci-cd-pipeline/BuildArtif/${ObjectKey}/lambda_functions/removeItem.zip"
+        S3Key: !Sub "ci-cd-pipeline/lambdaFunc/${ObjectKey}/lambda_functions/removeItem.zip"
       Layers:
         - !Ref LambdaLayer
       Environment:
