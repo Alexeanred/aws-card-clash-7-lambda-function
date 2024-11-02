@@ -1,21 +1,11 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: CloudFormation template for creating two Lambda functions with a shared layer to interact with DynamoDB and link to API Gateway.
+Description: CloudFormation template for creating DynamoDB, API Gateway, Lambda functions with a shared layer for item management.
 
 Parameters:
   DynamoDBTableName:
     Type: String
-    Description: Name of the existing DynamoDB table
+    Description: Name of the DynamoDB table to store items.
     Default: ShoppingItem
-
-  AddItemAPI:
-    Type: String
-    Description: REST API ID for Add Item API Gateway
-    Default: dstu3hejk7
-
-  RemoveItemAPI:
-    Type: String
-    Description: REST API ID for Remove Item API Gateway
-    Default: 2xlsy6b466
 
   ArtifactS3Bucket:
     Type: String
@@ -37,9 +27,22 @@ Parameters:
     Type: String
     Description: S3 Key of the Lambda layer artifact.
 
-
-
 Resources:
+  # DynamoDB Table
+  MyDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Ref DynamoDBTableName
+      AttributeDefinitions:
+        - AttributeName: itemId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: itemId
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
   # Lambda Layer
   LambdaLayer:
     Type: AWS::Lambda::LayerVersion
@@ -51,7 +54,7 @@ Resources:
       Content:
         S3Bucket: !Ref BucketName
         S3Key: !Ref LayerObjectKey
-        
+
   # AddItem Lambda Function
   AddItemLambdaFunction:
     Type: AWS::Lambda::Function
@@ -115,14 +118,63 @@ Resources:
                   - logs:PutLogEvents
                 Resource: "arn:aws:logs:*:*:*"
 
-  # API Gateway Integrations for Lambda Functions
+  # API Gateway for AddItem and RemoveItem
+  MyRestApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: MyApiGateway
+
+  AddItemResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt MyRestApi.RootResourceId
+      PathPart: additem
+      RestApiId: !Ref MyRestApi
+
+  RemoveItemResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt MyRestApi.RootResourceId
+      PathPart: removeitem
+      RestApiId: !Ref MyRestApi
+
+  # Define Methods for each endpoint (AddItem and RemoveItem)
+  AddItemMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: POST
+      ResourceId: !Ref AddItemResource
+      RestApiId: !Ref MyRestApi
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub
+          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction.Arn}/invocations
+          - { Region: !Ref "AWS::Region", LambdaFunction: !Ref AddItemLambdaFunction }
+
+  RemoveItemMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: DELETE
+      ResourceId: !Ref RemoveItemResource
+      RestApiId: !Ref MyRestApi
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: DELETE
+        Uri: !Sub
+          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction.Arn}/invocations
+          - { Region: !Ref "AWS::Region", LambdaFunction: !Ref RemoveItemLambdaFunction }
+
+  # API Gateway Permissions for Lambda Functions
   AddItemLambdaPermission:
     Type: AWS::Lambda::Permission
     Properties:
       FunctionName: !Ref AddItemLambdaFunction
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${AddItemAPI}/*"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${MyRestApi}/*"
 
   RemoveItemLambdaPermission:
     Type: AWS::Lambda::Permission
@@ -130,7 +182,7 @@ Resources:
       FunctionName: !Ref RemoveItemLambdaFunction
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RemoveItemAPI}/*"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${MyRestApi}/*"
 
 Outputs:
   AddItemLambdaFunctionArn:
@@ -144,4 +196,12 @@ Outputs:
   LambdaLayerArn:
     Description: ARN of the shared Lambda Layer
     Value: !Ref LambdaLayer
+
+  DynamoDBTableNameOutput:
+    Description: Name of the DynamoDB table
+    Value: !Ref MyDynamoDBTable
+
+  RestApiId:
+    Description: ID of the API Gateway REST API
+    Value: !Ref MyRestApi
  
