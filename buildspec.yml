@@ -1,0 +1,41 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.12
+    commands:
+      - pip install --upgrade pip
+
+  pre_build:
+    commands:
+      - echo "Preparing Lambda function files without zipping"
+      - mkdir -p python
+      - pip install -r lambda_functions/lambda_layer_requirements.txt -t python
+      - echo "Contents of python directory:"
+      - ls -R python  # List files in the python directory for verification
+
+  post_build:
+    commands:
+      - echo "Uploading lambda_layer contents to S3 with KMS encryption"
+      - aws s3 cp python s3://$S3_BUCKET_NAME/layers/python --recursive --sse aws:kms
+      - echo "Upload complete"
+
+artifacts:
+  discard-paths: yes  # This will remove the path structure in the output artifacts
+  files:
+    - lambda_functions/addItem/lambda_function.py  # Include addItem function
+    - lambda_functions/removeItem/lambda_function.py  # Include removeItem function
+  secondary-artifacts:
+    addItemArtifact:
+      files:
+        - lambda_functions/addItem/lambda_function.py  # Artifact for addItem
+      discard-paths: yes  # Discard parent directory paths
+    removeItemArtifact:
+      files:
+        - lambda_functions/removeItem/lambda_function.py  # Artifact for removeItem
+      discard-paths: yes  # Discard parent directory paths
+    layerArtifact:
+      files:
+        - 'python/**/*'  # Including all files in the python directory for layer
+
