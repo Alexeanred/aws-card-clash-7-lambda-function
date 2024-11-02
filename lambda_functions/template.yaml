@@ -9,7 +9,7 @@ Parameters:
 
   ArtifactS3Bucket:
     Type: String
-    Default: "codepipeline-us-east-1-534781109788"
+    Default: codepipeline-us-east-1-534781109788
     
   BucketName:
     Type: String
@@ -26,6 +26,10 @@ Parameters:
   LayerObjectKey:
     Type: String
     Description: S3 Key of the Lambda layer artifact.
+
+  CloudFormationExecutionRole:
+    Type: String
+    Default: CloudFormationExecutionRole 
 
 Resources:
   # DynamoDB Table
