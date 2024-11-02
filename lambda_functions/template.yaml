@@ -27,9 +27,7 @@ Parameters:
     Type: String
     Description: S3 Key of the Lambda layer artifact.
 
-  CloudFormationExecutionRole:
-    Type: String
-    Default: CloudFormationExecutionRole 
+
 
 Resources:
   # DynamoDB Table
@@ -121,25 +119,6 @@ Resources:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                 Resource: "arn:aws:logs:*:*:*"
-
-  # IAM Policy for CloudFormationExecutionRole to manage API Gateway resources
-  ApiGatewayPolicyForCloudFormationExecutionRole:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyName: ApiGatewayPolicy
-      Roles:
-        - !Ref CloudFormationExecutionRole
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Action:
-              - apigateway:POST
-              - apigateway:PATCH
-              - apigateway:DELETE
-              - apigateway:GET
-              - apigateway:PUT
-            Resource: "arn:aws:apigateway:*::/restapis/*"
 
 
   # API Gateway for AddItem and RemoveItem
