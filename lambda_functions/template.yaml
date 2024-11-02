@@ -121,65 +121,67 @@ Resources:
                 Resource: "arn:aws:logs:*:*:*"
 
 
-  # API Gateway for AddItem and RemoveItem
-  MyRestApi:
+  # API Gateway for AddItem
+  AddItemApi:
     Type: AWS::ApiGateway::RestApi
     Properties:
-      Name: MyApiGateway
+      Name: AddItemApiGateway
 
   AddItemResource:
     Type: AWS::ApiGateway::Resource
     Properties:
-      ParentId: !GetAtt MyRestApi.RootResourceId
+      ParentId: !GetAtt AddItemApi.RootResourceId
       PathPart: additem
-      RestApiId: !Ref MyRestApi
+      RestApiId: !Ref AddItemApi
 
-  RemoveItemResource:
-    Type: AWS::ApiGateway::Resource
-    Properties:
-      ParentId: !GetAtt MyRestApi.RootResourceId
-      PathPart: removeitem
-      RestApiId: !Ref MyRestApi
-
-      
   AddItemMethod:
     Type: AWS::ApiGateway::Method
     Properties:
       AuthorizationType: NONE
       HttpMethod: POST
       ResourceId: !Ref AddItemResource
-      RestApiId: !Ref MyRestApi
+      RestApiId: !Ref AddItemApi
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub
           - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AddItemLambdaFunctionArn}/invocations
           - { AddItemLambdaFunctionArn: !GetAtt AddItemLambdaFunction.Arn }
-  
-  RemoveItemMethod:
-    Type: AWS::ApiGateway::Method
-    Properties:
-      AuthorizationType: NONE
-      HttpMethod: DELETE
-      ResourceId: !Ref RemoveItemResource
-      RestApiId: !Ref MyRestApi
-      Integration:
-        Type: AWS_PROXY
-        IntegrationHttpMethod: DELETE
-        Uri: !Sub
-          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RemoveItemLambdaFunctionArn}/invocations
-          - { RemoveItemLambdaFunctionArn: !GetAtt RemoveItemLambdaFunction.Arn }
-    
-      
 
-  # API Gateway Permissions for Lambda Functions
   AddItemLambdaPermission:
     Type: AWS::Lambda::Permission
     Properties:
       FunctionName: !Ref AddItemLambdaFunction
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${MyRestApi}/*"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${AddItemApi}/*"
+
+  # API Gateway for RemoveItem
+  RemoveItemApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: RemoveItemApiGateway
+
+  RemoveItemResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt RemoveItemApi.RootResourceId
+      PathPart: removeitem
+      RestApiId: !Ref RemoveItemApi
+
+  RemoveItemMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: DELETE
+      ResourceId: !Ref RemoveItemResource
+      RestApiId: !Ref RemoveItemApi
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: DELETE
+        Uri: !Sub
+          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RemoveItemLambdaFunctionArn}/invocations
+          - { RemoveItemLambdaFunctionArn: !GetAtt RemoveItemLambdaFunction.Arn }
 
   RemoveItemLambdaPermission:
     Type: AWS::Lambda::Permission
@@ -187,7 +189,7 @@ Resources:
       FunctionName: !Ref RemoveItemLambdaFunction
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${MyRestApi}/*"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RemoveItemApi}/*"
 
 Outputs:
   AddItemLambdaFunctionArn:
@@ -206,7 +208,10 @@ Outputs:
     Description: Name of the DynamoDB table
     Value: !Ref MyDynamoDBTable
 
-  RestApiId:
-    Description: ID of the API Gateway REST API
-    Value: !Ref MyRestApi
- 
+  AddItemApiId:
+    Description: ID of the AddItem API Gateway
+    Value: !Ref AddItemApi
+
+  RemoveItemApiId:
+    Description: ID of the RemoveItem API Gateway
+    Value: !Ref RemoveItemApi
