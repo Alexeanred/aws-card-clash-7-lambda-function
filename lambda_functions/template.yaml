@@ -138,7 +138,7 @@ Resources:
       PathPart: removeitem
       RestApiId: !Ref MyRestApi
 
-  # Define Methods for each endpoint (AddItem and RemoveItem)
+      
   AddItemMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -150,9 +150,9 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
         Uri: !Sub
-          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction.Arn}/invocations
-          - { Region: !Ref "AWS::Region", LambdaFunction: !Ref AddItemLambdaFunction }
-
+          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AddItemLambdaFunctionArn}/invocations
+          - { AddItemLambdaFunctionArn: !GetAtt AddItemLambdaFunction.Arn }
+  
   RemoveItemMethod:
     Type: AWS::ApiGateway::Method
     Properties:
@@ -164,8 +164,10 @@ Resources:
         Type: AWS_PROXY
         IntegrationHttpMethod: DELETE
         Uri: !Sub
-          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction.Arn}/invocations
-          - { Region: !Ref "AWS::Region", LambdaFunction: !Ref RemoveItemLambdaFunction }
+          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RemoveItemLambdaFunctionArn}/invocations
+          - { RemoveItemLambdaFunctionArn: !GetAtt RemoveItemLambdaFunction.Arn }
+    
+      
 
   # API Gateway Permissions for Lambda Functions
   AddItemLambdaPermission:
