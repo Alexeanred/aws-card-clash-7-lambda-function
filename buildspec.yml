@@ -8,7 +8,7 @@ phases:
       - pip install --upgrade pip
       - pip install pytest moto boto3
 
-  test_code:
+  pre_build:
     commands:
       - echo "Running tests for addItem"
       - pytest lambda_functions/addItem/test_addItem.py --junitxml=addItem_report.xml  # Chạy test cho addItem
