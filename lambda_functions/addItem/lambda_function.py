@@ -7,7 +7,7 @@ dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table('ShoppingItem')
 
 def add_item_handler(event, context):
-    print("Envent: ",event)
+    print("Event: ",event)
     # Nhận dữ liệu từ sự kiện (event)
     body = json.loads(event['body'])
     item_id = body['itemId']
