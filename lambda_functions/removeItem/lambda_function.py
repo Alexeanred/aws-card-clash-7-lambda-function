@@ -3,7 +3,7 @@ import boto3
 from botocore.exceptions import ClientError
 import markdown
 # Khởi tạo DynamoDB client
-dynamodb = boto3.resource('dynamodb')
+dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 table = dynamodb.Table('ShoppingItem')
 
 def remove_item_handler(event, context):

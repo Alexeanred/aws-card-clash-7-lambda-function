@@ -6,7 +6,7 @@ from lambda_function import add_item_handler
 @mock_aws  # Sử dụng mock_aws thay vì mock_dynamodb2
 def test_handler_success():
     # Mock DynamoDB table
-    dynamodb = boto3.resource('dynamodb')
+    dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
     table_name = "ShoppingItem"
     dynamodb.create_table(
         TableName=table_name,
